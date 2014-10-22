@@ -30,7 +30,6 @@ Ngrok::Tunnel.start(3001)
 Ngrok::Tunnel.local_port
 => 3001
 
-
 # ngrok external url
 Ngrok::Tunnel.ngrok_url
 => "http://aaa0e65.ngrok.com"
