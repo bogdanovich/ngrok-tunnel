@@ -1,6 +1,6 @@
 # Ngrok::Tunnel
 
-ngrok-tunnel provides ruby wrapper for ngrok
+Ngrok-tunnel gem is a ruby wrapper for ngrok
 
 ## Installation
 
