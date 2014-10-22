@@ -23,27 +23,38 @@ Or install it yourself as:
 ```ruby
 require 'ngrok/tunnel'
 
-# spawn ngrok
+# spawn ngrok at local port 3001
 Ngrok::Tunnel.start(3001)
 
 # ngrok local_port
 Ngrok::Tunnel.local_port
+=> 3001
+
 
 # ngrok external url
 Ngrok::Tunnel.ngrok_url
+=> "http://aaa0e65.ngrok.com"
+
 Ngrok::Tunnel.ngrok_url_https
+=> "https://aaa0e65.ngrok.com"
 
 Ngrok::Tunnel.running?
+=> true
+
 Ngrok::Tunnel.stopped?
+=> false
 
 # ngrok process id
 Ngrok::Tunnel.pid
+=> 27384
 
 # ngrok log file descriptor
 Ngrok::Tunnel.log_file
+=> #<File:/tmp/ngrok20141022-27376-cmmiq4>
 
 # kill ngrok
 Ngrok::Tunnel.stop
+=> :stopped
 
 ```
 
