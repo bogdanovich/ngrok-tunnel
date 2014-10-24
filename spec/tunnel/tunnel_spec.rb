@@ -20,8 +20,7 @@ describe Ngrok::Tunnel do
   describe "Run process" do
 
     before(:all) do
-      @local_port = 3001
-      Ngrok::Tunnel.start(3001)
+      Ngrok::Tunnel.start
     end
 
     after(:all) { Ngrok::Tunnel.stop }
@@ -39,7 +38,7 @@ describe Ngrok::Tunnel do
     end
 
     it "should match local_port" do
-      expect(Ngrok::Tunnel.local_port).to eq(@local_port)
+      expect(Ngrok::Tunnel.port).to eq(3001)
     end
 
     it "should have valid ngrok_url" do
@@ -58,6 +57,26 @@ describe Ngrok::Tunnel do
       expect(Ngrok::Tunnel.pid.to_s).to eq `pidof ngrok`.strip
     end
 
+  end
+
+  describe "Custom log file" do
+    it "should be able to use custom log file" do
+      Ngrok::Tunnel.start(log: 'test.log')
+      expect(Ngrok::Tunnel.running?).to eq true
+      expect(Ngrok::Tunnel.log.path).to eq 'test.log'
+      Ngrok::Tunnel.stop
+      expect(Ngrok::Tunnel.stopped?).to eq true
+    end
+  end
+
+  describe "Custom subdomain" do
+    it "should fail without authtoken" do
+      expect {Ngrok::Tunnel.start(subdomain: 'test-subdomain')}.to raise_error
+    end
+
+    it "should fail with incorrect authtoken" do
+      expect {Ngrok::Tunnel.start(subdomain: 'test-subdomain', authtoken: 'incorrect_token')}.to raise_error
+    end
   end
 
 end
