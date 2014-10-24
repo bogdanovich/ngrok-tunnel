@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Ngrok::Tunnel::VERSION
   spec.authors       = ["Anton Bogdanovich"]
   spec.email         = ["27bogdanovich@gmail.com"]
-  spec.summary       = %q{ngrok-tunnel provides ruby wrapper for ngrok}
-  spec.description   = %q{ngrok-tunnel provides ruby wrapper for ngrok}
+  spec.summary       = %q{Ngrok-tunnel gem is a ruby wrapper for ngrok}
+  spec.description   = %q{Ngrok-tunnel gem is a ruby wrapper for ngrok}
   spec.homepage      = "https://github.com/bogdanovich/ngrok-tunnel"
   spec.license       = "MIT"
 
