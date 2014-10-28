@@ -2,7 +2,7 @@
 
 Ngrok-tunnel gem is a ruby wrapper for ngrok
 
-[![Gem Version](https://badge.fury.io/rb/ngrok-tunnel.svg)](http://badge.fury.io/rb/ngrok-tunnel)
+[![Gem Version](https://badge.fury.io/rb/ngrok-tunnel.svg)](http://badge.fury.io/rb/ngrok-tunnel)  [![Code Climate](https://codeclimate.com/github/bogdanovich/ngrok-tunnel/badges/gpa.svg)](https://codeclimate.com/github/bogdanovich/ngrok-tunnel)
 
 ## Installation
 
