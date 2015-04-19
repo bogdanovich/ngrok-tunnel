@@ -8,7 +8,7 @@ module Ngrok
   class Error < StandardError; end
 
   class Tunnel
-    
+
     class << self
       attr_reader :pid, :ngrok_url, :ngrok_url_https, :status
 
@@ -23,12 +23,12 @@ module Ngrok
 
         if stopped?
           @params[:log] = (@params[:log]) ? File.open(@params[:log], 'w+') : Tempfile.new('ngrok')
-          @pid = spawn("exec ngrok " + ngrok_exec_params)
-          at_exit { Ngrok::Tunnel.stop }      
+          @pid = spawn("exec ngrok http " + ngrok_exec_params)
+          at_exit { Ngrok::Tunnel.stop }
           @status = :running
           fetch_urls
         end
-        
+
         @ngrok_url
       end
 
@@ -72,7 +72,7 @@ module Ngrok
       private
 
       def ngrok_exec_params
-        exec_params = "-log=stdout " 
+        exec_params = "-log=stdout -log-level=debug "
         exec_params << "-authtoken=#{@params[:authtoken]} " if @params[:authtoken]
         exec_params << "-subdomain=#{@params[:subdomain]} " if @params[:subdomain]
         exec_params << "-config=#{@params[:config]} #{@params[:port].to_i} > #{@params[:log].path}"
@@ -81,15 +81,20 @@ module Ngrok
       def fetch_urls
         @params[:timeout].times do
           log_content = @params[:log].read
-          @ngrok_url, @ngrok_url_https = log_content.scan(/"Url":"([^"]+)"/).flatten
-          return @ngrok_url if @ngrok_url
+          result = log_content.scan(/URL:(.+)\sProto:(http|https)\s/)
+          if !result.empty?
+            result = Hash[*result.flatten].invert
+            @ngrok_url = result['http']
+            @ngrok_url_https = result['https']
+            return @ngrok_url if @ngrok_url
+          end
 
-          error = log_content.scan(/"Error":"([^"]+)"/).flatten
+          error = log_content.scan(/msg="command failed" err="([^"]+)"/).flatten
           unless error.empty?
             self.stop
             raise Ngrok::Error, error.first
           end
-          
+
           sleep 1
           @params[:log].rewind
         end

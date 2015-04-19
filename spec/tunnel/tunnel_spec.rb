@@ -42,19 +42,15 @@ describe Ngrok::Tunnel do
     end
 
     it "should have valid ngrok_url" do
-      expect(Ngrok::Tunnel.ngrok_url).to be =~ /http:\/\/.*ngrok.com$/
+      expect(Ngrok::Tunnel.ngrok_url).to be =~ /http:\/\/.*ngrok\.io$/
     end
 
     it "should have valid ngrok_url_https" do
-      expect(Ngrok::Tunnel.ngrok_url_https).to be =~ /https:\/\/.*ngrok.com$/
+      expect(Ngrok::Tunnel.ngrok_url_https).to be =~ /https:\/\/.*ngrok\.io$/
     end
 
     it "should have pid > 0" do
       expect(Ngrok::Tunnel.pid).to be > 0
-    end
-
-    it "should present in process list" do
-      expect(Ngrok::Tunnel.pid.to_s).to eq `pidof ngrok`.strip
     end
 
   end
