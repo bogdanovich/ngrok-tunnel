@@ -72,7 +72,7 @@ module Ngrok
       private
 
       def ngrok_exec_params
-        exec_params = "-log=stdout -log-level=debug "
+        exec_params = "-log=stdout "
         exec_params << "-authtoken=#{@params[:authtoken]} " if @params[:authtoken]
         exec_params << "-subdomain=#{@params[:subdomain]} " if @params[:subdomain]
         exec_params << "-config=#{@params[:config]} #{@params[:port].to_i} > #{@params[:log].path}"
