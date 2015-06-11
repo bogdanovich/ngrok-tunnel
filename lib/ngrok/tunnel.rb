@@ -25,10 +25,10 @@ module Ngrok
           @params[:log] = (@params[:log]) ? File.open(@params[:log], 'w+') : Tempfile.new('ngrok')
           @pid = spawn("exec ngrok http " + ngrok_exec_params)
           at_exit { Ngrok::Tunnel.stop }
-          @status = :running
           fetch_urls
         end
 
+        @status = :running
         @ngrok_url
       end
 
