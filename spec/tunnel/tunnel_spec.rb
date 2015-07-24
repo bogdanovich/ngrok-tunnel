@@ -2,7 +2,7 @@
 describe Ngrok::Tunnel do
 
   describe "Before start" do
-    
+
     it "should not be running" do
       expect(Ngrok::Tunnel.running?).to be false
     end
@@ -72,6 +72,16 @@ describe Ngrok::Tunnel do
 
     it "should fail with incorrect authtoken" do
       expect {Ngrok::Tunnel.start(subdomain: 'test-subdomain', authtoken: 'incorrect_token')}.to raise_error
+    end
+  end
+
+  describe "Custom hostname" do
+    it "should fail without authtoken" do
+      expect {Ngrok::Tunnel.start(hostname: 'example.com')}.to raise_error
+    end
+
+    it "should fail with incorrect authtoken" do
+      expect {Ngrok::Tunnel.start(hostname: 'example.com', authtoken: 'incorrect_token')}.to raise_error
     end
   end
 
