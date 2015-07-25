@@ -1,5 +1,5 @@
 module Ngrok
   class Tunnel
-    VERSION = "2.0.17"
+    VERSION = "2.0.20"
   end
 end
