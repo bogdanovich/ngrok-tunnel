@@ -85,4 +85,22 @@ describe Ngrok::Tunnel do
     end
   end
 
+  describe "Custom parameters provided" do
+    it "should not include the -inspect parameter when it is not provided" do
+      Ngrok::Tunnel.start()
+      expect(Ngrok::Tunnel.send(:ngrok_exec_params).include? "-inspect=").to be false
+      Ngrok::Tunnel.stop
+    end
+
+    it "should include the -inspect parameter with the correct value when it is provided" do
+      Ngrok::Tunnel.start(inspect: true)
+      expect(Ngrok::Tunnel.send(:ngrok_exec_params).include? "-inspect=true").to be true
+      Ngrok::Tunnel.stop
+
+      Ngrok::Tunnel.start(inspect: false)
+      expect(Ngrok::Tunnel.send(:ngrok_exec_params).include? "-inspect=false").to be true
+      Ngrok::Tunnel.stop
+    end
+  end
+
 end
