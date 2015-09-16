@@ -67,6 +67,7 @@ Ngrok::Tunnel.start(port: 3333,
                     subdomain: 'MY_SUBDOMAIN',
                     hostname: 'MY_HOSTNAME',
                     authtoken: 'MY_TOKEN',
+                    inspect: false,
                     log: 'ngrok.log',
                     config: '~/.ngrok')
 
