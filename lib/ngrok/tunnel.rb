@@ -13,6 +13,9 @@ module Ngrok
       attr_reader :pid, :ngrok_url, :ngrok_url_https, :status
 
       def init(params = {})
+        # map old key 'port' to 'addr' to maintain backwards compatibility with versions 2.0.21 and earlier
+        params[:addr] = params.delete(:port) if params.key?(:port)
+
         @params = {addr: 3001, timeout: 10, config: '/dev/null'}.merge(params)
         @status = :stopped unless @status
       end
@@ -51,6 +54,11 @@ module Ngrok
 
       def addr
         @params[:addr]
+      end
+
+      def port
+        return addr if addr.is_a?(Numeric)
+        addr.split(":").last.to_i
       end
 
       def log

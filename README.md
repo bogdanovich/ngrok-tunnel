@@ -63,7 +63,7 @@ Ngrok::Tunnel.stop
 
 ```ruby
 # ngrok custom parameters
-Ngrok::Tunnel.start(port: 3333,
+Ngrok::Tunnel.start(addr: 3333,
                     subdomain: 'MY_SUBDOMAIN',
                     hostname: 'MY_HOSTNAME',
                     authtoken: 'MY_TOKEN',
