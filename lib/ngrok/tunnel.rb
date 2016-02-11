@@ -13,7 +13,7 @@ module Ngrok
       attr_reader :pid, :ngrok_url, :ngrok_url_https, :status
 
       def init(params = {})
-        @params = {port: 3001, timeout: 10, config: '/dev/null'}.merge(params)
+        @params = {addr: 3001, timeout: 10, config: '/dev/null'}.merge(params)
         @status = :stopped unless @status
       end
 
@@ -49,8 +49,8 @@ module Ngrok
         @status == :stopped
       end
 
-      def port
-        @params[:port]
+      def addr
+        @params[:addr]
       end
 
       def log
@@ -77,7 +77,7 @@ module Ngrok
         exec_params << "-subdomain=#{@params[:subdomain]} " if @params[:subdomain]
         exec_params << "-hostname=#{@params[:hostname]} " if @params[:hostname]
         exec_params << "-inspect=#{@params[:inspect]} " if @params.has_key? :inspect
-        exec_params << "-config=#{@params[:config]} #{@params[:port].to_i} > #{@params[:log].path}"
+        exec_params << "-config=#{@params[:config]} #{@params[:addr]} > #{@params[:log].path}"
       end
 
       def fetch_urls
