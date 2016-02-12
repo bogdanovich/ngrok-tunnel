@@ -1,4 +1,3 @@
-
 describe Ngrok::Tunnel do
 
   describe "Before start" do
@@ -37,8 +36,12 @@ describe Ngrok::Tunnel do
       expect(Ngrok::Tunnel.status).to eq :running
     end
 
-    it "should match local_port" do
+    it "should still support port" do
       expect(Ngrok::Tunnel.port).to eq(3001)
+    end
+
+    it "should match local_addr" do
+      expect(Ngrok::Tunnel.addr).to eq(3001)
     end
 
     it "should have valid ngrok_url" do
@@ -67,21 +70,44 @@ describe Ngrok::Tunnel do
 
   describe "Custom subdomain" do
     it "should fail without authtoken" do
-      expect {Ngrok::Tunnel.start(subdomain: 'test-subdomain')}.to raise_error
+      expect {Ngrok::Tunnel.start(subdomain: 'test-subdomain')}.to raise_error Ngrok::Error
     end
 
     it "should fail with incorrect authtoken" do
-      expect {Ngrok::Tunnel.start(subdomain: 'test-subdomain', authtoken: 'incorrect_token')}.to raise_error
+      expect {Ngrok::Tunnel.start(subdomain: 'test-subdomain', authtoken: 'incorrect_token')}.to raise_error Ngrok::Error
     end
   end
 
   describe "Custom hostname" do
     it "should fail without authtoken" do
-      expect {Ngrok::Tunnel.start(hostname: 'example.com')}.to raise_error
+      expect {Ngrok::Tunnel.start(hostname: 'example.com')}.to raise_error Ngrok::Error
     end
 
     it "should fail with incorrect authtoken" do
-      expect {Ngrok::Tunnel.start(hostname: 'example.com', authtoken: 'incorrect_token')}.to raise_error
+      expect {Ngrok::Tunnel.start(hostname: 'example.com', authtoken: 'incorrect_token')}.to raise_error Ngrok::Error
+    end
+  end
+
+  describe "Custom addr" do
+    it "should map port param to addr" do
+      port = 10010
+      Ngrok::Tunnel.start(port: port)
+      expect(Ngrok::Tunnel.addr).to eq port
+      Ngrok::Tunnel.stop
+    end
+
+    it "should return just the port when the address contains a host" do
+      addr = '192.168.0.5:10010'
+      Ngrok::Tunnel.start(addr: addr)
+      expect(Ngrok::Tunnel.port).to eq 10010
+      Ngrok::Tunnel.stop
+    end
+
+    it "should support remote addresses" do
+      addr = '192.168.0.5:10010'
+      Ngrok::Tunnel.start(addr: addr)
+      expect(Ngrok::Tunnel.addr).to eq addr
+      Ngrok::Tunnel.stop
     end
   end
 
