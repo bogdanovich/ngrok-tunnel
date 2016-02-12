@@ -1,3 +1,7 @@
+## 2.1.0
+
+- Added support for non-local server using `addr` parameter
+
 ## 2.0.21
 
 - Added support for -inspect option

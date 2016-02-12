@@ -36,10 +36,10 @@ Ngrok::Tunnel.port
 
 # ngrok external url
 Ngrok::Tunnel.ngrok_url
-=> "http://aaa0e65.ngrok.com"
+=> "http://aaa0e65.ngrok.io"
 
 Ngrok::Tunnel.ngrok_url_https
-=> "https://aaa0e65.ngrok.com"
+=> "https://aaa0e65.ngrok.io"
 
 Ngrok::Tunnel.running?
 => true
@@ -63,7 +63,7 @@ Ngrok::Tunnel.stop
 
 ```ruby
 # ngrok custom parameters
-Ngrok::Tunnel.start(addr: 3333,
+Ngrok::Tunnel.start(addr: 'foo.dev:80',
                     subdomain: 'MY_SUBDOMAIN',
                     hostname: 'MY_HOSTNAME',
                     authtoken: 'MY_TOKEN',
