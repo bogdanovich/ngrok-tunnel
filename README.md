@@ -73,6 +73,9 @@ Ngrok::Tunnel.start(addr: 'foo.dev:80',
 
 ```
 
+### With Rails (Rack server)
+
+See [examples/rack-server.rb](examples/rack-server.rb) to get an idea how to use it along with a Rack server so that it automatically starts and stops when a Rack server does.
 
 ## Contributing
 
