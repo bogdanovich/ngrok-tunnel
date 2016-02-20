@@ -77,6 +77,10 @@ Ngrok::Tunnel.start(addr: 'foo.dev:80',
 
 See [examples/rack-server.rb](examples/rack-server.rb) to get an idea how to use it along with a Rack server so that it automatically starts and stops when a Rack server does.
 
+### With RSpec and Capybara
+
+Use this gem: [ngrok-rspec](https://github.com/bogdanovich/ngrok-rspec)
+
 ## Contributing
 
 1. Fork it ( https://github.com/bogdanovich/ngrok-tunnel/fork )
