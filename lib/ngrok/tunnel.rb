@@ -16,7 +16,7 @@ module Ngrok
         # map old key 'port' to 'addr' to maintain backwards compatibility with versions 2.0.21 and earlier
         params[:addr] = params.delete(:port) if params.key?(:port)
 
-        @params = {addr: 3001, timeout: 10, config: '/dev/null'}.merge(params)
+        @params = {addr: 3001, timeout: 10, config: '/dev/null', persistence_file: '/tmp/ngrok-process'}.merge(params)
         @status = :stopped unless @status
       end
 
@@ -24,14 +24,49 @@ module Ngrok
         ensure_binary
         init(params)
 
+        if @params[:persistence]
+          # Attempt to read the attributes of an existing process instead of starting a new process.
+          begin
+            state = JSON.parse(File.open(@params[:persistence_file], "rb").read)
+            running = begin
+                        Process.kill(0, state['pid'])
+                        true
+                      rescue Errno::ESRCH
+                        false
+                      rescue Errno::EPERM
+                        false
+                      end
+            
+            if running
+              @status = :running
+              @pid = state['pid']
+              @ngrok_url = state['ngrok_url']
+              @ngrok_url_https = state['ngrok_url_https']
+            end
+          rescue StandardError
+            # Catch all errors that could have happened while reading the file and just treat them as not finding an existing process.
+          end
+        end
+                
         if stopped?
           @params[:log] = (@params[:log]) ? File.open(@params[:log], 'w+') : Tempfile.new('ngrok')
           @pid = spawn("exec ngrok http " + ngrok_exec_params)
-          at_exit { Ngrok::Tunnel.stop }
+          if @params[:persistence]
+            Process.detach(@pid)
+          else
+            at_exit { Ngrok::Tunnel.stop }
+          end
+
           fetch_urls
         end
 
         @status = :running
+
+        if @params[:persistence]
+          # Record the attributes of the new process so that it can be reused on a subsequent call.
+          File.open(@params[:persistence_file], 'w') {|f| f.write({pid: @pid, ngrok_url: @ngrok_url, ngrok_url_https: @ngrok_url_https}.to_json)}
+        end
+
         @ngrok_url
       end
 
