@@ -108,22 +108,36 @@ describe Ngrok::Tunnel do
     end
   end
 
+  describe "Custom host header" do
+    it "doesn't include the -host-header parameter when it is not provided" do
+      Ngrok::Tunnel.start()
+      expect(Ngrok::Tunnel.send(:ngrok_exec_params)).not_to include("-host-header=")
+      Ngrok::Tunnel.stop
+    end
+
+    it "includes the -host-header parameter with the correct value when it is provided" do
+      host_header = 'foo.bar'
+      Ngrok::Tunnel.start(host_header: host_header)
+      expect(Ngrok::Tunnel.send(:ngrok_exec_params)).to include("-host-header=#{host_header}")
+      Ngrok::Tunnel.stop
+    end
+  end
+
   describe "Custom parameters provided" do
     it "doesn't include the -inspect parameter when it is not provided" do
       Ngrok::Tunnel.start()
-      expect(Ngrok::Tunnel.send(:ngrok_exec_params).include? "-inspect=").to be false
+      expect(Ngrok::Tunnel.send(:ngrok_exec_params)).not_to include("-inspect=")
       Ngrok::Tunnel.stop
     end
 
     it "includes the -inspect parameter with the correct value when it is provided" do
       Ngrok::Tunnel.start(inspect: true)
-      expect(Ngrok::Tunnel.send(:ngrok_exec_params).include? "-inspect=true").to be true
+      expect(Ngrok::Tunnel.send(:ngrok_exec_params)).to include("-inspect=true")
       Ngrok::Tunnel.stop
 
       Ngrok::Tunnel.start(inspect: false)
-      expect(Ngrok::Tunnel.send(:ngrok_exec_params).include? "-inspect=false").to be true
+      expect(Ngrok::Tunnel.send(:ngrok_exec_params)).to include("-inspect=false")
       Ngrok::Tunnel.stop
     end
   end
-
 end
