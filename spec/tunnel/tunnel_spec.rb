@@ -108,6 +108,21 @@ describe Ngrok::Tunnel do
     end
   end
 
+  describe "Custom region" do
+    it "doesn't include the -region parameter when it is not provided" do
+      Ngrok::Tunnel.start()
+      expect(Ngrok::Tunnel.send(:ngrok_exec_params)).not_to include("-region=")
+      Ngrok::Tunnel.stop
+    end
+
+    it "includes the -region parameter with the correct value when it is provided" do
+      region = 'eu'
+      Ngrok::Tunnel.start(region: region)
+      expect(Ngrok::Tunnel.send(:ngrok_exec_params)).to include("-region=#{region}")
+      Ngrok::Tunnel.stop
+    end
+  end
+
   describe "Custom host header" do
     it "doesn't include the -host-header parameter when it is not provided" do
       Ngrok::Tunnel.start()
