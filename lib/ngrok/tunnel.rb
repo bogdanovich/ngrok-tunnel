@@ -99,6 +99,7 @@ module Ngrok
             @ngrok_url = result['http']
             @ngrok_url_https = result['https']
             return @ngrok_url if @ngrok_url
+            return @ngrok_url_https if @ngrok_url_https
           end
 
           error = log_content.scan(/msg="command failed" err="([^"]+)"/).flatten
