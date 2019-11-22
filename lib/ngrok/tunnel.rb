@@ -81,6 +81,7 @@ module Ngrok
 
       def ngrok_exec_params
         exec_params = "-log=stdout -log-level=debug "
+        exec_params << "-bind-tls=#{@params[:bind_tls]} " if @params.has_key? :bind_tls
         exec_params << "-region=#{@params[:region]} " if @params[:region]
         exec_params << "-host-header=#{@params[:host_header]} " if @params[:host_header]
         exec_params << "-authtoken=#{@params[:authtoken]} " if @params[:authtoken]
@@ -99,6 +100,7 @@ module Ngrok
             @ngrok_url = result['http']
             @ngrok_url_https = result['https']
             return @ngrok_url if @ngrok_url
+            return @ngrok_url_https if @ngrok_url_https
           end
 
           error = log_content.scan(/msg="command failed" err="([^"]+)"/).flatten
