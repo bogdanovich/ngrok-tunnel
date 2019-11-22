@@ -123,6 +123,28 @@ describe Ngrok::Tunnel do
     end
   end
 
+  describe "Custom bind-tls" do
+    it "doesn't include the -bind-tls parameter when it is not provided" do
+      Ngrok::Tunnel.start()
+      expect(Ngrok::Tunnel.send(:ngrok_exec_params)).not_to include("-bind-tls=")
+      Ngrok::Tunnel.stop
+    end
+
+    it "includes the -bind-tls parameter with the correct value when it is true" do
+      bind_tls = true
+      Ngrok::Tunnel.start(bind_tls: bind_tls)
+      expect(Ngrok::Tunnel.send(:ngrok_exec_params)).to include("-bind-tls=#{bind_tls}")
+      Ngrok::Tunnel.stop
+    end
+
+    it "includes the -bind-tls parameter with the correct value when it is false" do
+      bind_tls = false
+      Ngrok::Tunnel.start(bind_tls: bind_tls)
+      expect(Ngrok::Tunnel.send(:ngrok_exec_params)).to include("-bind-tls=#{bind_tls}")
+      Ngrok::Tunnel.stop
+    end
+  end
+
   describe "Custom host header" do
     it "doesn't include the -host-header parameter when it is not provided" do
       Ngrok::Tunnel.start()
