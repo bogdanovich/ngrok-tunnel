@@ -69,7 +69,9 @@ Ngrok::Tunnel.start(addr: 'foo.dev:80',
                     authtoken: 'MY_TOKEN',
                     inspect: false,
                     log: 'ngrok.log',
-                    config: '~/.ngrok')
+                    config: '~/.ngrok',
+                    persistence: true,
+                    persistence_file: '/tmp/ngrok-process') # optional parameter
 
 ```
 

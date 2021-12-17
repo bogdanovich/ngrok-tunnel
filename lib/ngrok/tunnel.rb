@@ -16,7 +16,7 @@ module Ngrok
         # map old key 'port' to 'addr' to maintain backwards compatibility with versions 2.0.21 and earlier
         params[:addr] = params.delete(:port) if params.key?(:port)
 
-        @params = {addr: 3001, timeout: 10, config: '/dev/null'}.merge(params)
+        @params = {addr: 3001, timeout: 10, config: '/dev/null'}.merge!(params)
         @status = :stopped unless @status
       end
 
@@ -24,14 +24,56 @@ module Ngrok
         ensure_binary
         init(params)
 
+        persistent_ngrok = @params[:persistence]
+        if persistent_ngrok
+          persistence_file = @params[:persistence_file] || '/tmp/ngrok-process'
+          # Attempt to read the attributes of an existing process instead of starting a new process.
+          begin
+            state = JSON.parse(File.open(persistence_file, "rb").read)
+            pid = state['pid']&.to_i
+            running = begin
+                        Process.kill(0, pid) if pid
+                        true
+                      rescue Errno::ESRCH
+                        false
+                      rescue Errno::EPERM
+                        false
+                      end
+
+            if running
+              @status = :running
+              @pid = pid
+              @ngrok_url = state['ngrok_url']
+              @ngrok_url_https = state['ngrok_url_https']
+            end
+          rescue StandardError => e
+            e
+            # Catch all errors that could have happened while reading the file and just treat them as not finding an existing process.
+          end
+        end
+
         if stopped?
           @params[:log] = (@params[:log]) ? File.open(@params[:log], 'w+') : Tempfile.new('ngrok')
-          @pid = spawn("exec ngrok http " + ngrok_exec_params)
-          at_exit { Ngrok::Tunnel.stop }
+          if persistent_ngrok
+            Process.spawn("exec nohup ngrok http #{ngrok_exec_params} &")
+            @pid = (`ps ax | grep ngrok`).split(/\n/).find { |line| line.include?('ngrok http')}.split[0]
+          else
+            @pid = spawn("exec ngrok http #{ngrok_exec_params}")
+            at_exit { Ngrok::Tunnel.stop }
+          end
+
           fetch_urls
         end
 
         @status = :running
+
+        if persistent_ngrok
+          # Record the attributes of the new process so that it can be reused on a subsequent call.
+          File.open(persistence_file, 'w') do |f|
+            f.write({pid: @pid, ngrok_url: @ngrok_url, ngrok_url_https: @ngrok_url_https}.to_json)
+          end
+        end
+
         @ngrok_url
       end
 
