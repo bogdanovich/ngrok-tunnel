@@ -88,7 +88,7 @@ module Ngrok
       def raise_if_similar_ngroks(pid)
         other_similar_ngroks = ngrok_process_status_lines.select do |line|
           # If the pid is not nil and the line starts with this pid, do not take this line into account
-          !(pid && line.start_with?(pid)) && line.include?('ngrok http') && line.end_with?(addr)
+          !(pid && line.start_with?(pid)) && line.include?('ngrok http') && line.end_with?("#{addr}")
         end
 
         return if other_similar_ngroks.empty?
@@ -157,7 +157,7 @@ module Ngrok
         exec_params << "-subdomain=#{@params[:subdomain]} " if @params[:subdomain]
         exec_params << "-hostname=#{@params[:hostname]} " if @params[:hostname]
         exec_params << "-inspect=#{@params[:inspect]} " if @params.has_key? :inspect
-        exec_params << "-config=#{@params[:config]} #{@params[:addr]} > #{@params[:log].path}"
+        exec_params << "-config #{@params[:config]} #{@params[:addr]} > #{@params[:log].path}"
       end
 
       def fetch_urls
