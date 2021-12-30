@@ -103,7 +103,7 @@ module Ngrok
       end
 
       def try_params_from_running_ngrok
-        @persistence_file = @params[:persistence_file] || '/tmp/ngrok-process'
+        @persistence_file = @params[:persistence_file] || "#{File.dirname(@params[:config])}/ngrok-process.json"
         state = parse_persistence_file
         pid = state&.[]('pid')
         raise_if_similar_ngroks(pid)
@@ -143,9 +143,7 @@ module Ngrok
 
       def store_new_ngrok_process
         # Record the attributes of the new process so that it can be reused on a subsequent call.
-        File.open(@persistence_file, 'w') do |f|
-          f.write({ pid: @pid, ngrok_url: @ngrok_url, ngrok_url_https: @ngrok_url_https }.to_json)
-        end
+        File.write(@persistence_file, { pid: @pid, ngrok_url: @ngrok_url, ngrok_url_https: @ngrok_url_https }.to_json)
       end
 
       def ngrok_exec_params
