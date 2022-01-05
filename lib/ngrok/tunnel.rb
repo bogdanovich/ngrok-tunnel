@@ -24,7 +24,7 @@ module Ngrok
         ensure_binary
         init(params)
 
-        persistent_ngrok = @params[:persistence]
+        persistent_ngrok = @params[:persistence] == true
         # Attempt to read the attributes of an existing process instead of starting a new process.
         try_params_from_running_ngrok if persistent_ngrok
 
