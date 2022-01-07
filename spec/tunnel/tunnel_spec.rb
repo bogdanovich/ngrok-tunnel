@@ -146,6 +146,8 @@ describe Ngrok::Tunnel do
   end
 
   describe "Custom host header" do
+    before { expect(Ngrok::Tunnel).to receive(:fetch_urls) }
+
     it "doesn't include the -host-header parameter when it is not provided" do
       Ngrok::Tunnel.start()
       expect(Ngrok::Tunnel.send(:ngrok_exec_params)).not_to include("-host-header=")
@@ -175,6 +177,40 @@ describe Ngrok::Tunnel do
       Ngrok::Tunnel.start(inspect: false)
       expect(Ngrok::Tunnel.send(:ngrok_exec_params)).to include("-inspect=false")
       Ngrok::Tunnel.stop
+    end
+  end
+
+  describe '#start' do
+    before { allow(Process).to receive(:kill) }
+    after { Ngrok::Tunnel.stop }
+
+    describe 'when persistence param is true' do
+      it 'tries fetching params of an already running Ngrok and store Ngrok process data into a file ' do
+        expect(Ngrok::Tunnel).to receive(:try_params_from_running_ngrok)
+        expect(Ngrok::Tunnel).to receive(:spawn_new_ngrok).with(persistent_ngrok: true)
+        expect(Ngrok::Tunnel).to receive(:store_new_ngrok_process)
+
+        Ngrok::Tunnel.start(persistence: true)
+      end
+    end
+
+    describe 'when persistence param is not true' do
+      it "doesn't try to fetch params of an already running Ngrok" do
+        expect(Ngrok::Tunnel).not_to receive(:try_params_from_running_ngrok)
+        expect(Ngrok::Tunnel).to receive(:spawn_new_ngrok).with(persistent_ngrok: false)
+        expect(Ngrok::Tunnel).not_to receive(:store_new_ngrok_process)
+
+        Ngrok::Tunnel.start(persistence: false)
+      end
+    end
+
+    describe 'when Ngrok::Tunnel is already running' do
+      it "doesn't try to spawn a new Ngrok process" do
+        allow(Ngrok::Tunnel).to receive(:stopped?).and_return(false)
+        expect(Ngrok::Tunnel).not_to receive(:spawn_new_ngrok)
+
+        Ngrok::Tunnel.start
+      end
     end
   end
 end
