@@ -71,7 +71,7 @@ Ngrok::Tunnel.start(addr: 'foo.dev:80',
                     log: 'ngrok.log',
                     config: '~/.ngrok',
                     persistence: true,
-                    persistence_file: '/tmp/ngrok-process') # optional parameter
+                    persistence_file: '/Users/user/.ngrok2/ngrok-process.json') # optional parameter
 
 ```
 
