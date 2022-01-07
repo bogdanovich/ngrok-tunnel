@@ -16,7 +16,7 @@ module Ngrok
         # map old key 'port' to 'addr' to maintain backwards compatibility with versions 2.0.21 and earlier
         params[:addr] = params.delete(:port) if params.key?(:port)
 
-        @params = {addr: 3001, timeout: 10, config: '/dev/null'}.merge(params)
+        @params = {addr: 3001, timeout: 10, config: '/dev/null'}.merge!(params)
         @status = :stopped unless @status
       end
 
@@ -24,14 +24,14 @@ module Ngrok
         ensure_binary
         init(params)
 
-        if stopped?
-          @params[:log] = (@params[:log]) ? File.open(@params[:log], 'w+') : Tempfile.new('ngrok')
-          @pid = spawn("exec ngrok http " + ngrok_exec_params)
-          at_exit { Ngrok::Tunnel.stop }
-          fetch_urls
-        end
+        persistent_ngrok = @params[:persistence] == true
+        # Attempt to read the attributes of an existing process instead of starting a new process.
+        try_params_from_running_ngrok if persistent_ngrok
+
+        spawn_new_ngrok(persistent_ngrok: persistent_ngrok) if stopped?
 
         @status = :running
+        store_new_ngrok_process if persistent_ngrok
         @ngrok_url
       end
 
@@ -79,6 +79,73 @@ module Ngrok
 
       private
 
+      def parse_persistence_file
+        JSON.parse(File.read(@persistence_file))
+      rescue StandardError => _e # Catch all possible errors on reading and parsing the file
+        nil
+      end
+
+      def raise_if_similar_ngroks(pid)
+        other_similar_ngroks = ngrok_process_status_lines.select do |line|
+          # If the pid is not nil and the line starts with this pid, do not take this line into account
+          !(pid && line.start_with?(pid)) && line.include?('ngrok http') && line.end_with?("#{addr}")
+        end
+
+        return if other_similar_ngroks.empty?
+
+        raise Ngrok::Error, "ERROR: Other ngrok instances tunneling to port #{addr} found"
+      end
+
+      def ngrok_process_status_lines(refetch: false)
+        return @ngrok_process_status_lines if defined?(@ngrok_process_status_lines) && !refetch
+
+        @ngrok_process_status_lines = (`ps ax | grep "ngrok http"`).split(/\n/)
+      end
+
+      def try_params_from_running_ngrok
+        @persistence_file = @params[:persistence_file] || "#{File.dirname(@params[:config])}/ngrok-process.json"
+        state = parse_persistence_file
+        pid = state&.[]('pid')
+        raise_if_similar_ngroks(pid)
+
+        return unless ngrok_running?(pid)
+
+        @status = :running
+        @pid = pid
+        @ngrok_url = state['ngrok_url']
+        @ngrok_url_https = state['ngrok_url_https']
+      end
+
+      def ngrok_running?(pid)
+        pid && Process.kill(0, pid.to_i) ? true : false
+      rescue Errno::ESRCH, Errno::EPERM
+        false
+      end
+
+      def spawn_new_ngrok(persistent_ngrok:)
+        raise_if_similar_ngroks(nil)
+        prepare_ngrok_logfile
+        if persistent_ngrok
+          Process.spawn("exec nohup ngrok http #{ngrok_exec_params} &")
+          @pid = ngrok_process_status_lines(refetch: true).find { |line| line.include?('ngrok http -log')}.split[0]
+        else
+          @pid = spawn("exec ngrok http #{ngrok_exec_params}")
+          at_exit { Ngrok::Tunnel.stop }
+        end
+
+        fetch_urls
+      end
+
+      def prepare_ngrok_logfile
+        # Prepare the log file into which ngrok output will be redirected in `ngrok_exec_params`
+        @params[:log] = @params[:log] ? File.open(@params[:log], 'w+') : Tempfile.new('ngrok')
+      end
+
+      def store_new_ngrok_process
+        # Record the attributes of the new process so that it can be reused on a subsequent call.
+        File.write(@persistence_file, { pid: @pid, ngrok_url: @ngrok_url, ngrok_url_https: @ngrok_url_https }.to_json)
+      end
+
       def ngrok_exec_params
         exec_params = "-log=stdout -log-level=debug "
         exec_params << "-bind-tls=#{@params[:bind_tls]} " if @params.has_key? :bind_tls
@@ -88,7 +155,7 @@ module Ngrok
         exec_params << "-subdomain=#{@params[:subdomain]} " if @params[:subdomain]
         exec_params << "-hostname=#{@params[:hostname]} " if @params[:hostname]
         exec_params << "-inspect=#{@params[:inspect]} " if @params.has_key? :inspect
-        exec_params << "-config=#{@params[:config]} #{@params[:addr]} > #{@params[:log].path}"
+        exec_params << "-config #{@params[:config]} #{@params[:addr]} > #{@params[:log].path}"
       end
 
       def fetch_urls
