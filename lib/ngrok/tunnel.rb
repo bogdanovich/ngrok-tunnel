@@ -13,15 +13,14 @@ module Ngrok
       attr_reader :pid, :ngrok_url, :ngrok_url_https, :status
 
       def init(params = {})
-        # map old key 'port' to 'addr' to maintain backwards compatibility with versions 2.0.21 and earlier
-        params[:addr] = params.delete(:port) if params.key?(:port)
-
-        @params = {addr: 3001, timeout: 10, config: '/dev/null'}.merge(params)
+        @params = {addr: 3001, timeout: 10, config: create_empty_config_file.path}.merge(params)
         @status = :stopped unless @status
       end
 
       def start(params = {})
         ensure_binary
+        raise Ngrok::NotFound, "Ngrok version >= 3 required" if pre_v3?
+
         init(params)
 
         if stopped?
@@ -80,15 +79,18 @@ module Ngrok
       private
 
       def ngrok_exec_params
-        exec_params = "-log=stdout -log-level=debug "
-        exec_params << "-bind-tls=#{@params[:bind_tls]} " if @params.has_key? :bind_tls
-        exec_params << "-region=#{@params[:region]} " if @params[:region]
-        exec_params << "-host-header=#{@params[:host_header]} " if @params[:host_header]
-        exec_params << "-authtoken=#{@params[:authtoken]} " if @params[:authtoken]
-        exec_params << "-subdomain=#{@params[:subdomain]} " if @params[:subdomain]
-        exec_params << "-hostname=#{@params[:hostname]} " if @params[:hostname]
-        exec_params << "-inspect=#{@params[:inspect]} " if @params.has_key? :inspect
-        exec_params << "-config=#{@params[:config]} #{@params[:addr]} > #{@params[:log].path}"
+        exec_params = "--log=stdout --log-level=debug "
+        exec_params << "--scheme=#{@params[:scheme]} " if @params.has_key? :scheme
+        exec_params << "--region=#{@params[:region]} " if @params[:region]
+        exec_params << "--host-header=#{@params[:host_header]} " if @params[:host_header]
+        exec_params << "--authtoken=#{@params[:authtoken]} " if @params[:authtoken]
+        exec_params << "--subdomain=#{@params[:subdomain]} " if @params[:subdomain]
+        exec_params << "--hostname=#{@params[:hostname]} " if @params[:hostname]
+        exec_params << "--inspect=#{@params[:inspect]} " if @params.has_key? :inspect
+        exec_params << "--config=#{@params[:config]} #{@params[:addr]} > #{@params[:log].path}"
+        exec_params << " 2>&1" if @params[:redirect_stderr]
+
+        exec_params
       end
 
       def fetch_urls
@@ -117,9 +119,22 @@ module Ngrok
       end
 
       def ensure_binary
-        `ngrok version`
+        @version = `ngrok version`
       rescue Errno::ENOENT
         raise Ngrok::NotFound, "Ngrok binary not found"
+      end
+
+      def pre_v3?
+        /^ngrok version [012]\./.match?(@version)
+      end
+
+      def create_empty_config_file
+        tmp = Tempfile.new('ngrok_config-')
+        tmp << "version: ""2""\n"
+        tmp.flush
+        tmp.close
+
+        tmp
       end
     end
 
